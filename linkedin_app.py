@@ -183,7 +183,7 @@ with tab2:
     # LinkedIn usage by Income:
     plot_usage_by("income", 
                 title="LinkedIn Usage by Income Level", 
-                xlabel="Income Level")
+                xlabel="Income Level (1=Low → 9=High)")
 
 
     #LinkedIn usage by Gender:
