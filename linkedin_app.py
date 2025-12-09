@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 from sklearn.model_selection import train_test_split
@@ -157,62 +158,51 @@ if st.button("Predict LinkedIn Usage"):
 
     st.write(f"**Probability this person uses LinkedIn:** {prob_linkedin:.1%}")
 
-import streamlit as st
-import pandas as pd
+#visualization:
 
-# -----------------------------------
-# Assume ss already exists with columns:
-# ['sm_li', 'income', 'education', 'parent', 'married', 'female', 'age']
-# -----------------------------------
+st.subheader("LinkedIn Usage by Demographics & Socioeconomic Segments")
 
-# Create segment columns
-ss = ss.copy()
+st.write("These charts show how LinkedIn usage varies across demographic and socioeconomic groups. Higher usage suggests stronger target segments for marketing campaigns.")
 
-# Age groups
-age_bins = [0, 29, 44, 59, 120]
-age_labels = ["18–29", "30–44", "45–59", "60+"]
-ss["age_group"] = pd.cut(ss["age"], bins=age_bins, labels=age_labels, right=True, include_lowest=True)
+#function for plotting:
+def plot_usage_by(column, title, xlabel):
+    usage = ss.groupby(column)["sm_li"].mean().reset_index()
+    usage["sm_li"] = usage["sm_li"] * 100 
 
-# Income bands (adjust ranges if you prefer)
-inc_bins = [0, 3, 6, 9]
-inc_labels = ["Low (1–3)", "Mid (4–6)", "High (7–9)"]
-ss["income_band"] = pd.cut(ss["income"], bins=inc_bins, labels=inc_labels, right=True, include_lowest=True)
+    fig, ax = plt.subplots(figsize=(6,4))
+    sns.barplot(data=usage, x=column, y="sm_li", ax=ax)
+    plt.title(title)
+    plt.ylabel("LinkedIn Usage (%)")
+    plt.xlabel(xlabel)
+    plt.xticks(rotation=0)
+    st.pyplot(fig)
 
-# Gender label
-ss["gender_label"] = ss["female"].map({1: "Female", 0: "Male"})
 
-# -----------------------------------
-# Tabs
-# -----------------------------------
-tab_overview, tab_segments = st.tabs(["Overview", "Segment Discovery"])
+# LinkedIn usage by Income:
+plot_usage_by("income", 
+              title="LinkedIn Usage by Income Level", 
+              xlabel="Income Level (1=Low → 9=High)")
 
-with tab_segments:
-    st.header("Segment Discovery")
 
-    st.write(
-        "Each row below is a segment defined by age group, income band, and gender. "
-        "`linkedin_usage_rate` is the share of people in that segment who use LinkedIn."
-    )
+#LinkedIn usage by Gender:
+if "gender_label" not in ss.columns:
+    ss["gender_label"] = ss["female"].map({1:"Female", 0:"Male"})
 
-    # Group into segments
-    segment_cols = ["age_group", "income_band", "gender_label"]
-    seg = (
-        ss.groupby(segment_cols)
-          .agg(
-              segment_size=("sm_li", "size"),
-              linkedin_users=("sm_li", "sum"),
-              linkedin_usage_rate=("sm_li", "mean"),
-          )
-          .reset_index()
-    )
+plot_usage_by("gender_label", 
+              title="LinkedIn Usage by Gender", 
+              xlabel="Gender")
 
-    # Optional: minimum segment size filter
-    min_size = st.slider("Minimum segment size to display", 0, int(seg["segment_size"].max()), 20)
-    seg_filtered = seg[seg["segment_size"] >= min_size]
 
-    # Show table with formatted rate
-    seg_display = seg_filtered.copy()
-    seg_display["linkedin_usage_rate"] = seg_display["linkedin_usage_rate"].map(lambda x: f"{x:.1%}")
+#LinkedIn usage by Education Level:
+plot_usage_by("education", 
+              title="LinkedIn Usage by Education Level", 
+              xlabel="Education Level (1=Low → 8=High)")
 
-    st.dataframe(seg_display, use_container_width=True)
+# LinkedIn usage by Marital Status
+marital_map = {1:"Married", 0:"Not Married"}
+if "marital_label" not in ss.columns:
+    ss["marital_label"] = ss["married"].map(marital_map)
 
+plot_usage_by("marital_label", 
+              title="LinkedIn Usage by Marital Status", 
+              xlabel="Marital Status")
