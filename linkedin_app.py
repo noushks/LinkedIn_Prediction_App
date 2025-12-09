@@ -135,7 +135,7 @@ if st.button("Predict LinkedIn Usage"):
 
     # Predicted class and probability
     pred_class = logreg.predict(person_features)[0]
-    prob_linkedin = logreg.predict_proba(person_features)[0][1]  # probability of class 1
+    prob_linkedin = logreg.predict_proba(person_features)[0][1]  
 
     if pred_class == 1:
         st.success("Predicted class: **LinkedIn user**")
@@ -157,9 +157,17 @@ if st.button("Predict LinkedIn Usage"):
 
     st.write(f"**Probability this person uses LinkedIn:** {prob_linkedin:.1%}")
 
-    #Creating usage rate and size visualization: 
+import streamlit as st
+import pandas as pd
 
+# -----------------------------------
+# Assume ss already exists with columns:
+# ['sm_li', 'income', 'education', 'parent', 'married', 'female', 'age']
+# -----------------------------------
+
+# Create segment columns
 ss = ss.copy()
+
 # Age groups
 age_bins = [0, 29, 44, 59, 120]
 age_labels = ["18–29", "30–44", "45–59", "60+"]
@@ -172,3 +180,39 @@ ss["income_band"] = pd.cut(ss["income"], bins=inc_bins, labels=inc_labels, right
 
 # Gender label
 ss["gender_label"] = ss["female"].map({1: "Female", 0: "Male"})
+
+# -----------------------------------
+# Tabs
+# -----------------------------------
+tab_overview, tab_segments = st.tabs(["Overview", "Segment Discovery"])
+
+with tab_segments:
+    st.header("Segment Discovery")
+
+    st.write(
+        "Each row below is a segment defined by age group, income band, and gender. "
+        "`linkedin_usage_rate` is the share of people in that segment who use LinkedIn."
+    )
+
+    # Group into segments
+    segment_cols = ["age_group", "income_band", "gender_label"]
+    seg = (
+        ss.groupby(segment_cols)
+          .agg(
+              segment_size=("sm_li", "size"),
+              linkedin_users=("sm_li", "sum"),
+              linkedin_usage_rate=("sm_li", "mean"),
+          )
+          .reset_index()
+    )
+
+    # Optional: minimum segment size filter
+    min_size = st.slider("Minimum segment size to display", 0, int(seg["segment_size"].max()), 20)
+    seg_filtered = seg[seg["segment_size"] >= min_size]
+
+    # Show table with formatted rate
+    seg_display = seg_filtered.copy()
+    seg_display["linkedin_usage_rate"] = seg_display["linkedin_usage_rate"].map(lambda x: f"{x:.1%}")
+
+    st.dataframe(seg_display, use_container_width=True)
+
