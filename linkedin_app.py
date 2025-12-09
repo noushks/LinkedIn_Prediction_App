@@ -11,6 +11,9 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 # 1. Load and prepare the data
 s = pd.read_excel("social_media_usage.xlsx")
 
+#creating tabs for 1) Prediction, 2) visualizations: 
+tab1, tab2 = st.tabs(["Predictions", "Visualizations"])
+
 # Creating a function: 
 def clean_sm(x):
     """Return 1 if value is 1, else 0."""
@@ -159,50 +162,49 @@ if st.button("Predict LinkedIn Usage"):
     st.write(f"**Probability this person uses LinkedIn:** {prob_linkedin:.1%}")
 
 #visualization:
-
-st.subheader("LinkedIn Usage by Demographics & Socioeconomic Segments")
-
-st.write("These charts show how LinkedIn usage varies across demographic and socioeconomic groups. Higher usage suggests stronger target segments for marketing campaigns.")
+with tab2:
+    st.subheader("LinkedIn Usage by Demographics & Socioeconomic Segments")
+    st.write("These charts show how LinkedIn usage varies across demographic and socioeconomic groups. Higher usage suggests stronger target segments for marketing campaigns.")
 
 #function for plotting:
-def plot_usage_by(column, title, xlabel):
-    usage = ss.groupby(column)["sm_li"].mean().reset_index()
-    usage["sm_li"] = usage["sm_li"] * 100 
+    def plot_usage_by(column, title, xlabel):
+        usage = ss.groupby(column)["sm_li"].mean().reset_index()
+        usage["sm_li"] = usage["sm_li"] * 100 
 
-    fig, ax = plt.subplots(figsize=(6,4))
-    sns.barplot(data=usage, x=column, y="sm_li", ax=ax)
-    plt.title(title)
-    plt.ylabel("LinkedIn Usage (%)")
-    plt.xlabel(xlabel)
-    plt.xticks(rotation=0)
-    st.pyplot(fig)
-
-
-# LinkedIn usage by Income:
-plot_usage_by("income", 
-              title="LinkedIn Usage by Income Level", 
-              xlabel="Income Level")
+        fig, ax = plt.subplots(figsize=(6,4))
+        sns.barplot(data=usage, x=column, y="sm_li", ax=ax)
+        plt.title(title)
+        plt.ylabel("LinkedIn Usage (%)")
+        plt.xlabel(xlabel)
+        plt.xticks(rotation=0)
+        st.pyplot(fig)
 
 
-#LinkedIn usage by Gender:
-if "gender_label" not in ss.columns:
-    ss["gender_label"] = ss["female"].map({1:"Female", 0:"Male"})
-
-plot_usage_by("gender_label", 
-              title="LinkedIn Usage by Gender", 
-              xlabel="Gender")
+    # LinkedIn usage by Income:
+    plot_usage_by("income", 
+                title="LinkedIn Usage by Income Level", 
+                xlabel="Income Level")
 
 
-#LinkedIn usage by Education Level:
-plot_usage_by("education", 
-              title="LinkedIn Usage by Education Level", 
-              xlabel="Education Level (1=Low → 8=High)")
+    #LinkedIn usage by Gender:
+    if "gender_label" not in ss.columns:
+        ss["gender_label"] = ss["female"].map({1:"Female", 0:"Male"})
 
-# LinkedIn usage by Marital Status
-marital_map = {1:"Married", 0:"Not Married"}
-if "marital_label" not in ss.columns:
-    ss["marital_label"] = ss["married"].map(marital_map)
+    plot_usage_by("gender_label", 
+                title="LinkedIn Usage by Gender", 
+                xlabel="Gender")
 
-plot_usage_by("marital_label", 
-              title="LinkedIn Usage by Marital Status", 
-              xlabel="Marital Status")
+
+    #LinkedIn usage by Education Level:
+    plot_usage_by("education", 
+                title="LinkedIn Usage by Education Level", 
+                xlabel="Education Level (1=Low → 8=High)")
+
+    # LinkedIn usage by Marital Status
+    marital_map = {1:"Married", 0:"Not Married"}
+    if "marital_label" not in ss.columns:
+        ss["marital_label"] = ss["married"].map(marital_map)
+
+    plot_usage_by("marital_label", 
+                title="LinkedIn Usage by Marital Status", 
+                xlabel="Marital Status")
