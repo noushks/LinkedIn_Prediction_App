@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -181,7 +181,7 @@ def plot_usage_by(column, title, xlabel):
 # LinkedIn usage by Income:
 plot_usage_by("income", 
               title="LinkedIn Usage by Income Level", 
-              xlabel="Income Level (1=Low → 9=High)")
+              xlabel="Income Level")
 
 
 #LinkedIn usage by Gender:
