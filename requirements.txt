@@ -1,3 +1,6 @@
+
+seaborn
+seaborn
 altair==6.0.0
 attrs==25.4.0
 blinker==1.9.0
